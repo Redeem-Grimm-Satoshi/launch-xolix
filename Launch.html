@@ -1,0 +1,478 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover"/>
+<meta name="theme-color" content="#0E1F15"/>
+<meta name="description" content="Xolix.AI Research Labs — building XolixDB in the open. Fault-tolerant NoSQL, papers and post-mortems published as we work."/>
+<title>Xolix.AI — Launching Soon</title>
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght,SOFT,WONK@0,9..144,400..700,0..100,0..1;1,9..144,400..700,0..100,0..1&family=Source+Serif+4:ital,opsz,wght@0,8..60,400..700;1,8..60,400..700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+
+<script src="https://unpkg.com/react@18.3.1/umd/react.development.js" integrity="sha384-hD6/rw4ppMLGNu3tX5cjIb+uRZ7UkRJ6BPkLpg4hAu/6onKUg4lLsHAs9EBPT82L" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.development.js" integrity="sha384-u6aeetuaXnQ38mYT8rp6sbXaQe3NL9t+IBXmnYxwkUI2Hw4bsp2Wvmx4yRQF1uAm" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/@babel/standalone@7.29.0/babel.min.js" integrity="sha384-m08KidiNqLdpJqLq95G/LEi8Qvjl/xUYll3QILypMoQ65QorJ9Lvtp2RXYGBFj1y" crossorigin="anonymous"></script>
+
+<style>
+  :root {
+    --paper0: #FBFAF7; --sand200: #E5D8AF; --sand400: #C7B68A;
+    --forest300: #79A287; --forest500: #2F6B4A; --forest700: #1B412B;
+    --forest800: #142E1F; --forest900: #0E1F15;
+    --ink0: #0F1A12; --ink3: #6B6A62;
+    --fontD: "Fraunces", Georgia, serif;
+    --fontB: "Source Serif 4", Georgia, serif;
+    --fontM: "JetBrains Mono", ui-monospace, monospace;
+  }
+  * { box-sizing: border-box; }
+  html, body {
+    margin: 0; padding: 0; min-height: 100%;
+    background: var(--forest900); color: var(--paper0);
+    font-family: var(--fontB);
+    -webkit-font-smoothing: antialiased; text-rendering: optimizeLegibility;
+  }
+  body { overflow-x: hidden; }
+  #root { min-height: 100dvh; min-height: 100vh; }
+  a { color: inherit; }
+  button, input { font: inherit; color: inherit; }
+  ::selection { background: var(--sand400); color: var(--forest900); }
+</style>
+</head>
+<body>
+<div id="root"></div>
+
+<script type="text/babel" data-presets="react">
+const { useState, useEffect } = React;
+
+const X = {
+  paper0: "#FBFAF7", sand200: "#E5D8AF", sand400: "#C7B68A",
+  forest300: "#79A287", forest500: "#2F6B4A", forest700: "#1B412B",
+  forest800: "#142E1F", forest900: "#0E1F15",
+  fontD: 'var(--fontD)', fontB: 'var(--fontB)', fontM: 'var(--fontM)',
+};
+
+/* ─── Mark + Wordmark ─── */
+function Mark({ size = 80, c1 = X.paper0, c2 = X.sand400, dot = X.paper0 }) {
+  return (
+    <svg width={size} height={size} viewBox="0 0 64 64" aria-hidden="true">
+      <g transform="translate(8,14)">
+        <circle cx="18" cy="18" r="15" fill="none" stroke={c1} strokeWidth="1.8"/>
+        <circle cx="26" cy="18" r="15" fill="none" stroke={c2} strokeWidth="1.8"/>
+        <circle cx="22" cy="18" r="2.4" fill={dot}/>
+      </g>
+    </svg>
+  );
+}
+function WordmarkLine({ size = 26 }) {
+  return (
+    <span style={{ display: "inline-flex", alignItems: "baseline", gap: 2 }}>
+      <span style={{ fontFamily: X.fontD, fontSize: size, letterSpacing: "-0.02em", fontWeight: 500, color: X.paper0, lineHeight: 1 }}>xolix</span>
+      <span style={{ fontFamily: X.fontD, fontSize: size, fontWeight: 500, color: X.sand400, lineHeight: 1 }}>.</span>
+      <span style={{ fontFamily: X.fontM, fontSize: Math.round(size * 0.5), color: X.sand400, letterSpacing: "0.1em", lineHeight: 1, marginLeft: 2 }}>AI</span>
+    </span>
+  );
+}
+
+/* ─── Typewriter (multi-phrase, looping) ─── */
+function Typewriter({ phrases, speed = 55, deleteSpeed = 30, holdMs = 1800, betweenMs = 400, startDelayMs = 200 }) {
+  const [phraseIdx, setPhraseIdx] = useState(0);
+  const [n, setN] = useState(0);
+  const [mode, setMode] = useState("typing");
+  const phrase = phrases[phraseIdx] || { segments: [] };
+  const total = phrase.segments.reduce((s, x) => s + x.text.length, 0);
+
+  useEffect(() => {
+    let id;
+    if (mode === "typing") {
+      if (n < total) id = setTimeout(() => setN(n + 1), n === 0 ? startDelayMs : speed);
+      else id = setTimeout(() => setMode("holding"), 0);
+    } else if (mode === "holding") {
+      id = setTimeout(() => setMode("deleting"), holdMs);
+    } else if (mode === "deleting") {
+      if (n > 0) id = setTimeout(() => setN(n - 1), deleteSpeed);
+      else id = setTimeout(() => setMode("between"), 0);
+    } else if (mode === "between") {
+      id = setTimeout(() => {
+        setPhraseIdx((phraseIdx + 1) % phrases.length);
+        setMode("typing");
+      }, betweenMs);
+    }
+    return () => clearTimeout(id);
+  }, [mode, n, total, phraseIdx, phrases.length, speed, deleteSpeed, holdMs, betweenMs, startDelayMs]);
+
+  let remaining = n;
+  const visible = phrase.segments.map((seg, i) => {
+    const take = Math.max(0, Math.min(seg.text.length, remaining));
+    remaining -= take;
+    const slice = seg.text.slice(0, take);
+    return slice ? <span key={`${phraseIdx}-${i}`} style={seg.style}>{slice}</span> : null;
+  });
+
+  return (
+    <>
+      {visible}
+      <span aria-hidden="true" style={{
+        display: "inline-block", width: "0.07em", height: "0.85em",
+        background: "currentColor", marginLeft: "0.06em", verticalAlign: "-0.08em",
+        animation: mode === "holding" ? "tw-caret 1s steps(1) infinite" : "tw-caret-fast .55s steps(1) infinite",
+      }}/>
+      <style>{`
+        @keyframes tw-caret { 0%, 50% { opacity: 1 } 50.01%, 100% { opacity: 0 } }
+        @keyframes tw-caret-fast { 0%, 50% { opacity: 1 } 50.01%, 100% { opacity: 0 } }
+      `}</style>
+    </>
+  );
+}
+
+/* ─── Countdown ─── */
+function Countdown({ target, label = "FIRST DISPATCH IN" }) {
+  const calc = () => {
+    const t = new Date(target + "T00:00:00").getTime() - Date.now();
+    if (isNaN(t) || t <= 0) return { d: 0, h: 0, m: 0, s: 0, done: true };
+    return {
+      d: Math.floor(t / 86400000),
+      h: Math.floor((t / 3600000) % 24),
+      m: Math.floor((t / 60000) % 60),
+      s: Math.floor((t / 1000) % 60),
+      done: false,
+    };
+  };
+  const [time, setTime] = useState(calc);
+  useEffect(() => { const id = setInterval(() => setTime(calc()), 1000); return () => clearInterval(id); }, [target]);
+  const pad = (n) => String(n).padStart(2, "0");
+
+  if (time.done) {
+    return (
+      <div className="countdown">
+        <div className="countdown-label"><span className="rule"/><span>{label}</span></div>
+        <div className="countdown-live"><em>live</em> <span style={{ color: X.forest300 }}>·</span> shipping now.</div>
+      </div>
+    );
+  }
+  return (
+    <div className="countdown">
+      <div className="countdown-label"><span className="rule"/><span>{label}</span></div>
+      <div className="countdown-cells">
+        <div className="cell"><span className="num">{pad(time.d)}</span><span className="lbl">days</span></div>
+        <div className="cell"><span className="num">{pad(time.h)}</span><span className="lbl">hrs</span></div>
+        <div className="cell"><span className="num">{pad(time.m)}</span><span className="lbl">min</span></div>
+        <div className="cell"><span className="num">{pad(time.s)}</span><span className="lbl">sec</span></div>
+      </div>
+    </div>
+  );
+}
+
+/* ─── Replication figure (responsive SVG) ─── */
+function ReplicationFigure() {
+  const [primary, setPrimary] = useState(0);
+  const [tick, setTick] = useState(0);
+  const NODES = 5;
+  const cx = 280, cy = 320, R = 200;
+  const positions = Array.from({ length: NODES }, (_, i) => {
+    const t = (i / NODES) * Math.PI * 2 - Math.PI / 2;
+    return { x: cx + R * Math.cos(t), y: cy + R * Math.sin(t) };
+  });
+  useEffect(() => { setTick(t => t + 1); }, [primary]);
+
+  return (
+    <div className="figure">
+      <div className="figure-head">
+        <span>FIG. 01 — REPLICATION (PLAYABLE)</span>
+        <span className="figure-hint">click a node to make it primary</span>
+      </div>
+      <svg viewBox="0 0 560 640" preserveAspectRatio="xMidYMid meet" style={{ display: "block", width: "100%", height: "auto" }}>
+        {positions.map((p, i) => positions.map((q, j) => i < j && (
+          <line key={`e${i}-${j}`} x1={p.x} y1={p.y} x2={q.x} y2={q.y}
+            stroke="rgba(229,216,175,0.18)" strokeWidth="1"/>
+        )))}
+        {positions.map((p, i) => i !== primary && (
+          <line key={`p${i}-${tick}`} x1={positions[primary].x} y1={positions[primary].y} x2={p.x} y2={p.y}
+            stroke={X.sand400} strokeWidth="1.4" strokeDasharray="4 5"
+            style={{ animation: `dash 1.2s linear infinite` }}/>
+        ))}
+        <circle key={`pulse-${tick}`} cx={positions[primary].x} cy={positions[primary].y} r="14"
+          fill="none" stroke={X.sand400} strokeWidth="1.5"
+          style={{ animation: "pulse-out 1.4s ease-out forwards" }}/>
+        {positions.map((p, i) => (
+          <g key={i} onClick={() => setPrimary(i)} style={{ cursor: "pointer" }}>
+            <circle cx={p.x} cy={p.y} r="34"
+              fill={i === primary ? X.sand400 : X.forest800}
+              stroke={i === primary ? X.sand400 : X.forest300}
+              strokeWidth="1.5"/>
+            <text x={p.x} y={p.y + 4} textAnchor="middle"
+              fontFamily="var(--fontM)" fontSize="13" fontWeight="500"
+              fill={i === primary ? X.forest900 : X.paper0}>N{i}</text>
+            {i === primary && (
+              <text x={p.x} y={p.y + 56} textAnchor="middle"
+                fontFamily="var(--fontM)" fontSize="10" letterSpacing="0.18em"
+                fill={X.sand400}>PRIMARY</text>
+            )}
+          </g>
+        ))}
+        <text x={cx} y={cy - 6} textAnchor="middle" fontFamily="var(--fontD)" fontSize="22" fontStyle="italic" fill={X.paper0}>quorum</text>
+        <text x={cx} y={cy + 18} textAnchor="middle" fontFamily="var(--fontM)" fontSize="11" fill={X.sand400} letterSpacing="0.16em">
+          {`W=${Math.ceil((NODES + 1) / 2)} · R=${Math.ceil((NODES + 1) / 2)}`}
+        </text>
+        <style>{`
+          @keyframes dash { to { stroke-dashoffset: -18 } }
+          @keyframes pulse-out { 0% { r: 14; opacity: 1 } 100% { r: 220; opacity: 0 } }
+        `}</style>
+      </svg>
+    </div>
+  );
+}
+
+/* ─── Page ─── */
+function App() {
+  const [submitted, setSubmitted] = useState(false);
+  const targetDate = "2026-05-27";
+
+  return (
+    <div className="page">
+      {/* background grain + radial glow */}
+      <div className="bg-grain" aria-hidden="true"/>
+      <div className="bg-glow" aria-hidden="true"/>
+      <div className="frame" aria-hidden="true"/>
+
+      <header className="header">
+        <a className="logo" href="#" aria-label="Xolix.AI home">
+          <Mark/>
+          <WordmarkLine/>
+        </a>
+        <div className="status" aria-live="polite">
+          <span className="status-dot"/>
+          <span>LIVE FROM THE LAB</span>
+        </div>
+      </header>
+
+      <main className="grid">
+        <section className="copy">
+          <div className="eyebrow">
+            <span className="rule"/>
+            <span>VOLUME 00 — LAUNCHING SOON</span>
+          </div>
+          <h1>
+            <Typewriter
+              phrases={[
+                { segments: [
+                  { text: "We are building " },
+                  { text: "databases", style: { fontStyle: "italic", color: X.sand400, fontVariationSettings: '"opsz" 144, "SOFT" 100, "WONK" 1' } },
+                  { text: " in the open." },
+                ] },
+                { segments: [
+                  { text: "Revolutionizing " },
+                  { text: "distributed systems", style: { fontStyle: "italic", color: X.sand400, fontVariationSettings: '"opsz" 144, "SOFT" 100, "WONK" 1' } },
+                  { text: "." },
+                ] },
+              ]}
+            />
+          </h1>
+          <p className="lede">
+            Xolix.AI Research Labs studies how distributed data systems break — replication races,
+            recovery edge cases, the small lies clocks tell. Our first project is <em>XolixDB</em>,
+            a fault-tolerant NoSQL database whose every commit, paper, and post-mortem is published as we work.
+          </p>
+
+          <form className="signup" onSubmit={e => { e.preventDefault(); setSubmitted(true); }}>
+            {submitted ? (
+              <div className="signup-ack">Thanks — we'll send the first dispatch when XolixDB ships.</div>
+            ) : (
+              <div className="signup-row">
+                <input type="email" required placeholder="email for the first dispatch" aria-label="Email address"/>
+                <button type="submit">NOTIFY <span aria-hidden="true">→</span></button>
+              </div>
+            )}
+          </form>
+
+          <Countdown target={targetDate}/>
+        </section>
+
+        <aside className="figure-wrap" aria-label="Replication diagram">
+          <ReplicationFigure/>
+        </aside>
+      </main>
+
+      <footer className="footer">
+        <span>© Xolix.AI Research Labs · Boston, MA</span>
+        <span className="dot">·</span>
+        <span>Papers under CC-BY-4.0</span>
+        <span className="dot">·</span>
+        <a href="#">research log</a>
+        <span className="dot">·</span>
+        <a href="#">github</a>
+      </footer>
+
+      <style>{`
+        .page {
+          position: relative; min-height: 100dvh;
+          padding: clamp(20px, 4vw, 56px) clamp(20px, 5vw, 64px);
+          display: flex; flex-direction: column; gap: clamp(28px, 4vw, 56px);
+        }
+        .bg-grain {
+          position: absolute; inset: 0; pointer-events: none;
+          background-image: radial-gradient(rgba(229,216,175,0.06) 1px, transparent 1px);
+          background-size: 22px 22px;
+          mask-image: linear-gradient(180deg, rgba(0,0,0,0.6), rgba(0,0,0,1));
+        }
+        .bg-glow {
+          position: absolute; inset: 0; pointer-events: none;
+          background: radial-gradient(60vw 50vh at 75% 45%, rgba(47,107,74,0.32), transparent 70%);
+        }
+        .frame {
+          position: absolute; inset: clamp(12px, 2.2vw, 28px);
+          border: 1px solid rgba(229,216,175,0.18); pointer-events: none;
+        }
+
+        /* Header */
+        .header {
+          position: relative; display: flex; justify-content: space-between; align-items: center;
+          gap: 16px; flex-wrap: wrap;
+        }
+        .logo { display: inline-flex; align-items: center; gap: 10px; text-decoration: none; }
+        .status {
+          display: inline-flex; align-items: center; gap: 8px;
+          font-family: var(--fontM); font-size: clamp(10px, 1.1vw, 11px);
+          color: var(--sand400); letter-spacing: 0.18em;
+        }
+        .status-dot {
+          width: 8px; height: 8px; border-radius: 50%;
+          background: var(--forest300); animation: lr-blink 1.6s ease-in-out infinite;
+        }
+        @keyframes lr-blink { 0%,100% { opacity: 1 } 50% { opacity: .25 } }
+
+        /* Grid */
+        .grid {
+          position: relative; display: grid; gap: clamp(28px, 4vw, 60px);
+          grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+          align-items: start;
+        }
+        @media (max-width: 900px) {
+          .grid { grid-template-columns: 1fr; }
+        }
+
+        /* Eyebrow */
+        .eyebrow {
+          display: flex; align-items: center; gap: 14px; margin-bottom: clamp(20px, 3vw, 34px);
+          font-family: var(--fontM); font-size: clamp(10px, 1.1vw, 11px);
+          color: var(--sand400); letter-spacing: 0.22em;
+        }
+        .eyebrow .rule, .countdown-label .rule {
+          width: 32px; height: 1px; background: var(--sand400); display: inline-block;
+        }
+
+        /* Headline */
+        h1 {
+          font-family: var(--fontD); font-weight: 400;
+          font-size: clamp(40px, 8.4vw, 96px);
+          line-height: 0.95; letter-spacing: -0.035em; margin: 0;
+          max-width: 13ch; min-height: 2.85em;
+          color: var(--paper0); text-wrap: balance;
+        }
+        .lede {
+          font-family: var(--fontB);
+          font-size: clamp(15px, 1.6vw, 18px);
+          line-height: 1.6; color: #CFDDD3;
+          margin: clamp(20px, 3vw, 32px) 0 0; max-width: 44ch;
+          text-wrap: pretty;
+        }
+        .lede em { color: var(--sand200); font-style: italic; }
+
+        /* Signup */
+        .signup { margin-top: clamp(24px, 3vw, 40px); max-width: 460px; }
+        .signup-row {
+          display: flex; align-items: stretch;
+          border-bottom: 1px solid var(--sand400); padding-bottom: 8px;
+          gap: 8px; flex-wrap: wrap;
+        }
+        .signup-row input {
+          flex: 1 1 200px; min-width: 0;
+          border: none; outline: none; background: transparent;
+          font-family: var(--fontB); font-size: 16px; color: var(--paper0);
+          padding: 8px 0;
+        }
+        .signup-row input::placeholder { color: rgba(251,250,247,0.55); }
+        .signup-row button {
+          background: var(--sand400); border: none; color: var(--forest900);
+          font-family: var(--fontM); font-size: 12px; letter-spacing: 0.18em;
+          padding: 10px 16px; cursor: pointer; border-radius: 2px; white-space: nowrap;
+        }
+        .signup-row button:hover { background: var(--sand200); }
+        .signup-ack {
+          padding: 16px 20px; border: 1px solid var(--sand400); border-radius: 4px;
+          font-family: var(--fontD); font-style: italic; color: var(--sand200); font-size: 16px;
+        }
+
+        /* Countdown */
+        .countdown { margin-top: clamp(24px, 3vw, 36px); display: flex; flex-direction: column; gap: 10px; }
+        .countdown-label {
+          display: flex; align-items: center; gap: 12px;
+          font-family: var(--fontM); font-size: clamp(9.5px, 1vw, 10.5px);
+          color: var(--sand400); letter-spacing: 0.22em;
+        }
+        .countdown-cells {
+          display: flex; align-items: flex-end; gap: clamp(16px, 2.5vw, 26px);
+          flex-wrap: wrap;
+        }
+        .cell {
+          display: flex; flex-direction: column; align-items: flex-start; gap: 4px;
+          min-width: 56px;
+        }
+        .num {
+          font-family: var(--fontD); font-weight: 400;
+          font-size: clamp(34px, 4.6vw, 50px); line-height: 1;
+          letter-spacing: -0.04em; color: var(--paper0);
+          font-variation-settings: "opsz" 144, "SOFT" 30;
+          font-feature-settings: "tnum" 1, "lnum" 1;
+        }
+        .lbl {
+          font-family: var(--fontM); font-size: clamp(9px, 0.95vw, 10px);
+          color: var(--sand400); letter-spacing: 0.22em; text-transform: uppercase;
+        }
+        .countdown-live {
+          font-family: var(--fontD); font-size: clamp(28px, 4.6vw, 50px);
+          font-style: italic; color: var(--sand400); line-height: 1;
+          font-variation-settings: "opsz" 144, "SOFT" 100, "WONK" 1;
+        }
+
+        /* Figure */
+        .figure-wrap { position: relative; min-width: 0; }
+        .figure {
+          position: relative; width: 100%; max-width: 640px;
+          border: 1px solid rgba(229,216,175,0.18); border-radius: 4px;
+          background: rgba(15,26,18,0.4); overflow: hidden;
+          margin-left: auto;
+        }
+        .figure-head {
+          display: flex; justify-content: space-between; align-items: center; gap: 12px; flex-wrap: wrap;
+          padding: 14px 18px;
+          border-bottom: 1px solid rgba(229,216,175,0.12);
+          font-family: var(--fontM); font-size: clamp(10px, 1.05vw, 11px);
+          color: var(--sand400); letter-spacing: 0.18em;
+        }
+        .figure-head .figure-hint { letter-spacing: 0.12em; text-transform: none; opacity: 0.85; }
+        @media (max-width: 900px) {
+          .figure { margin-left: 0; max-width: 560px; }
+          .figure-head .figure-hint { display: none; }
+        }
+
+        /* Footer */
+        .footer {
+          position: relative; display: flex; align-items: center; gap: 12px; flex-wrap: wrap;
+          font-family: var(--fontM); font-size: clamp(10px, 1vw, 11px);
+          color: var(--sand400); letter-spacing: 0.16em;
+          padding-top: clamp(16px, 2vw, 24px);
+          border-top: 1px solid rgba(229,216,175,0.12);
+        }
+        .footer a { color: var(--sand400); text-decoration: none; border-bottom: 1px dotted rgba(229,216,175,0.4); padding-bottom: 1px; }
+        .footer a:hover { color: var(--paper0); border-bottom-color: var(--paper0); }
+        .footer .dot { opacity: 0.6; }
+      `}</style>
+    </div>
+  );
+}
+
+ReactDOM.createRoot(document.getElementById("root")).render(<App/>);
+</script>
+</body>
+</html>
