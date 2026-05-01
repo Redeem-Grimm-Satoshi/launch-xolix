@@ -1,0 +1,44 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover"/>
+<meta name="theme-color" content="#0E1F15"/>
+<meta name="robots" content="noindex"/>
+<link rel="icon" type="image/svg+xml" href="favicon.svg"/>
+<title>You're on the list — Xolix.AI</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght,SOFT,WONK@0,9..144,400..700,0..100,0..1;1,9..144,400..700,0..100,0..1&family=Source+Serif+4:ital,opsz,wght@0,8..60,400..700;1,8..60,400..700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --paper0:#FBFAF7; --sand200:#E5D8AF; --sand400:#C7B68A;
+    --forest300:#79A287; --forest500:#2F6B4A; --forest900:#0E1F15;
+    --fontD:"Fraunces",Georgia,serif;
+    --fontB:"Source Serif 4",Georgia,serif;
+    --fontM:"JetBrains Mono",ui-monospace,monospace;
+  }
+  *{box-sizing:border-box}
+  html,body{margin:0;padding:0;min-height:100%;background:var(--forest900);color:var(--paper0);font-family:var(--fontB);-webkit-font-smoothing:antialiased}
+  .wrap{min-height:100dvh;display:flex;flex-direction:column;justify-content:center;align-items:center;text-align:center;padding:48px 24px;gap:24px;position:relative}
+  .frame{position:absolute;inset:clamp(12px,2.2vw,28px);border:1px solid rgba(229,216,175,0.18);pointer-events:none}
+  .glow{position:absolute;inset:0;pointer-events:none;background:radial-gradient(60vw 50vh at 50% 50%,rgba(47,107,74,0.32),transparent 70%)}
+  .eyebrow{display:inline-flex;align-items:center;gap:12px;font-family:var(--fontM);font-size:11px;color:var(--sand400);letter-spacing:0.22em;position:relative;z-index:1}
+  .eyebrow .rule{width:32px;height:1px;background:var(--sand400)}
+  h1{font-family:var(--fontD);font-weight:400;font-size:clamp(40px,7vw,72px);line-height:1;letter-spacing:-0.035em;margin:0;max-width:14ch;text-wrap:balance;position:relative;z-index:1;font-variation-settings:"opsz" 144,"SOFT" 100,"WONK" 1;font-style:italic;color:var(--sand200)}
+  p{font-family:var(--fontB);font-size:clamp(16px,1.6vw,18px);line-height:1.6;color:#CFDDD3;max-width:46ch;margin:0;position:relative;z-index:1;text-wrap:pretty}
+  a.back{font-family:var(--fontM);font-size:12px;letter-spacing:0.18em;color:var(--sand400);text-decoration:none;border-bottom:1px dotted rgba(229,216,175,0.4);padding-bottom:2px;position:relative;z-index:1;margin-top:8px}
+  a.back:hover{color:var(--paper0);border-bottom-color:var(--paper0)}
+</style>
+</head>
+<body>
+<div class="frame" aria-hidden="true"></div>
+<div class="glow" aria-hidden="true"></div>
+<main class="wrap">
+  <div class="eyebrow"><span class="rule"></span><span>SUBSCRIPTION CONFIRMED</span></div>
+  <h1>You're on the list.</h1>
+  <p>Thanks for signing up. We'll send the first dispatch when <em>XolixDB</em> ships — papers, post-mortems, and the code as we work.</p>
+  <a class="back" href="/">← back to xolix.ai</a>
+</main>
+</body>
+</html>
