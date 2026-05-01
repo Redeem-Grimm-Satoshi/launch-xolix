@@ -41,6 +41,10 @@
 </style>
 </head>
 <body>
+<form name="signup" data-netlify="true" netlify-honeypot="bot-field" hidden>
+  <input type="email" name="email"/>
+  <input name="bot-field"/>
+</form>
 <div id="root"></div>
 
 <script type="text/babel" data-presets="react">
@@ -226,7 +230,6 @@ function ReplicationFigure() {
 
 /* ─── Page ─── */
 function App() {
-  const [submitted, setSubmitted] = useState(false);
   const targetDate = "2026-05-27";
 
   return (
@@ -275,15 +278,20 @@ function App() {
             a fault-tolerant NoSQL database whose every commit, paper, and post-mortem is published as we work.
           </p>
 
-          <form className="signup" onSubmit={e => { e.preventDefault(); setSubmitted(true); }}>
-            {submitted ? (
-              <div className="signup-ack">Thanks — we'll send the first dispatch when XolixDB ships.</div>
-            ) : (
-              <div className="signup-row">
-                <input type="email" required placeholder="email for the first dispatch" aria-label="Email address"/>
-                <button type="submit">NOTIFY <span aria-hidden="true">→</span></button>
-              </div>
-            )}
+          <form
+            className="signup"
+            name="signup"
+            method="POST"
+            action="/thanks"
+            data-netlify="true"
+            netlify-honeypot="bot-field"
+          >
+            <input type="hidden" name="form-name" value="signup"/>
+            <p hidden><label>Don't fill this out: <input name="bot-field"/></label></p>
+            <div className="signup-row">
+              <input type="email" name="email" required placeholder="email for the first dispatch" aria-label="Email address"/>
+              <button type="submit">NOTIFY <span aria-hidden="true">→</span></button>
+            </div>
           </form>
 
           <Countdown target={targetDate}/>
